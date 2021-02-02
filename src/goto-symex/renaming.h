@@ -1,7 +1,6 @@
 #ifndef _GOTO_SYMEX_RENAMING_H_
 #define _GOTO_SYMEX_RENAMING_H_
 
-#include <set>
 #include <boost/functional/hash.hpp>
 #include <util/crypto_hash.h>
 #include <util/expr_util.h>

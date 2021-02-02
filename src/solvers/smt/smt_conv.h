@@ -870,7 +870,7 @@ public:
 };
 
 // Define here to enable inlining
-inline smt_ast::smt_ast(smt_convt *ctx, smt_sortt s)
+extern inline smt_ast::smt_ast(smt_convt *ctx, smt_sortt s)
   : sort(s), context(ctx)
 {
   assert(sort != nullptr);
