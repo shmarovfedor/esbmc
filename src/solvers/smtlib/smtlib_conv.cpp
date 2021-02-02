@@ -163,8 +163,7 @@ smtlib_convt::smtlib_convt(bool int_encoding, const namespacet &_ns)
   }
 #ifdef _WIN32
   // TODO: The current implementation uses UNIX Process
-  std::cerr << "smtlib works only in unix systems\n";
-  abort();
+  std::cerr << "smtlib works only in unix systems" << std::endl;
 #else
   if(pipe(inpipe) != 0)
   {
