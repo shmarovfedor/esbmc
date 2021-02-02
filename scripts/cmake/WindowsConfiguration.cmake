@@ -12,6 +12,7 @@ if (WIN32)
 	set(Python_EXECUTABLE python)
   endif()
   message(STATUS "Found Python: ${Python_EXECUTABLE}")
+
   set(LIBGOMP_LIB "-lgomp -ldl")
   set(OS_FLEX_SMTLIB_FLAGS "--wincompat")
   set(OS_X86_INCLUDE_FOLDER "C:/")
