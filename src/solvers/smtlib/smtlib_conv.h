@@ -4,7 +4,9 @@
 #include <list>
 #include <solvers/smt/smt_conv.h>
 #include <string>
-#ifndef _WIN32
+#ifdef _WIN32
+typedef uint64_t pid_t;
+#else
 #include <unistd.h>
 #endif
 #include <util/irep2.h>
@@ -272,6 +274,7 @@ public:
   void pop_ctx() override;
 
   // Members
+  pid_t solver_proc_pid;
   FILE *out_stream;
   FILE *in_stream;
   std::string solver_name;
