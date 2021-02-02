@@ -10,7 +10,7 @@ STATIC_ASSERT(0X1.0P-95F == 2.524355e-29f);
 // nothing before the dot
 STATIC_ASSERT(0X.0p+1f == 0);
 
-#if defined(__GNUC__) || defined(_WIN32)
+#ifdef __GNUC__
 _Complex c;
 #endif
 
