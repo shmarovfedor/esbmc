@@ -3,9 +3,7 @@
 #define __declspec /* hacks */
 #endif
 
-#ifdef _MSVC
 #define _INC_TIME_INL
-#endif
 #include <time.h>
 #undef time
 
