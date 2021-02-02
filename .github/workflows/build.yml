@@ -132,4 +132,4 @@ jobs:
     - name: Build ESBMC
       run: |
         cd build
-        cmake --build . --target INSTALL --config Release
+        MSBuild.exe INSTALL.vcxproj /p:Configuration=Release -maxCpuCount
