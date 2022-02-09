@@ -1932,6 +1932,8 @@ public:
     const expr2tc &falseval)
     : if_expr_methods(type, if_id, cond, trueval, falseval)
   {
+    assert(type->type_id == trueval->type->type_id);
+    assert(type->type_id == falseval->type->type_id);
   }
   if2t(const if2t &ref) = default;
 

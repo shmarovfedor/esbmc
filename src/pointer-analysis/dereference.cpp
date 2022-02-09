@@ -496,7 +496,13 @@ expr2tc dereferencet::dereference(
     }
   }
 
-  if(is_nil_expr(value) && mode != INTERNAL)
+  if(mode == INTERNAL)
+  {
+    // Deposit internal values with the caller, then clear.
+    dereference_callback.dump_internal_state(internal_items);
+    internal_items.clear();
+  }
+  else if(is_nil_expr(value))
   {
     // Dereference failed entirely; various assertions will explode later down
     // the line. To make this a valid formula though, return a failed symbol,
@@ -504,12 +510,6 @@ expr2tc dereferencet::dereference(
     value = make_failed_symbol(type);
     // Produce assertions to check for invalid objects
     valid_check(value, guard, mode);
-  }
-  else if(mode == INTERNAL)
-  {
-    // Deposit internal values with the caller, then clear.
-    dereference_callback.dump_internal_state(internal_items);
-    internal_items.clear();
   }
 
   return value;
@@ -715,14 +715,15 @@ expr2tc dereferencet::build_reference_to(
     return expr2tc();
   }
 
-  // Encode some access bounds checks.
-  if(is_array_type(value))
+  if(is_code_type(value) || is_code_type(type))
+  {
+    if(!check_code_access(value, final_offset, type, tmp_guard, mode))
+      return expr2tc();
+    /* here, both of them are code */
+  }
+  else if(is_array_type(value)) // Encode some access bounds checks.
   {
     bounds_check(value, final_offset, type, tmp_guard);
-  }
-  else if(is_code_type(value) || is_code_type(type))
-  {
-    check_code_access(value, final_offset, type, tmp_guard, mode);
   }
   else
   {
@@ -1451,14 +1452,21 @@ void dereferencet::construct_struct_ref_from_const_offset_array(
   assert(is_struct_type(type));
   const struct_type2t &structtype = to_struct_type(type);
   unsigned int struct_offset = intref.value.to_uint64();
-  for(auto const &it : structtype.members)
+  for(const type2tc &target_type : structtype.members)
   {
-    const type2tc &target_type = it;
-    expr2tc target = value; // The byte array;
-    build_reference_rec(
-      target, gen_ulong(struct_offset), target_type, guard, mode);
+    unsigned n_bits = type_byte_size_bits(target_type).to_uint64();
+    expr2tc target;
+    if(is_array_type(target_type))
+      target = stitch_together_from_byte_array(
+        target_type, (n_bits + 7) / 8, value, gen_ulong(struct_offset), guard);
+    else
+    {
+      target = value; // The byte array;
+      build_reference_rec(
+        target, gen_ulong(struct_offset), target_type, guard, mode);
+    }
     fields.push_back(target);
-    struct_offset += type_byte_size_bits(target_type).to_uint64();
+    struct_offset += n_bits;
   }
 
   // We now have a vector of fields reconstructed from the byte array
@@ -1885,8 +1893,7 @@ void dereferencet::stitch_together_from_byte_array(
     accuml = bytes[0];
     for(unsigned int i = 1; i < num_bytes; i++)
     {
-      type2tc res_type;
-      res_type = get_uint_type(accuml->type->get_width() + 8);
+      type2tc res_type = get_uint_type(accuml->type->get_width() + 8);
       accuml = concat2tc(res_type, accuml, bytes[i]);
     }
   }
@@ -1896,13 +1903,30 @@ void dereferencet::stitch_together_from_byte_array(
     accuml = bytes[num_bytes - 1];
     for(int i = num_bytes - 2; i >= 0; i--)
     {
-      type2tc res_type;
-      res_type = get_uint_type(accuml->type->get_width() + 8);
+      type2tc res_type = get_uint_type(accuml->type->get_width() + 8);
       accuml = concat2tc(res_type, accuml, bytes[i]);
     }
   }
 
   value = accuml;
+}
+
+expr2tc dereferencet::stitch_together_from_byte_array(
+  const type2tc &type,
+  unsigned int num_bytes,
+  const expr2tc &byte_array,
+  const expr2tc &offset,
+  const guardt & /* guard */)
+{
+  assert(num_bytes != 0);
+
+  /* TODO: check array bounds, (alignment?) */
+
+  expr2tc *bytes = extract_bytes_from_array(byte_array, num_bytes, offset);
+  expr2tc result;
+  stitch_together_from_byte_array(result, num_bytes, bytes);
+  delete[] bytes;
+  return bitcast2tc(type, result);
 }
 
 void dereferencet::valid_check(
@@ -2089,57 +2113,48 @@ void dereferencet::wrap_in_scalar_step_list(
   }
 }
 
-void dereferencet::check_code_access(
+bool dereferencet::check_code_access(
   expr2tc &value,
   const expr2tc &offset,
   const type2tc &type,
   const guardt &guard,
   modet mode)
 {
-  if(is_code_type(value) && !is_code_type(type))
-  {
-    dereference_failure(
-      "Code separation",
-      "Program code accessed with non-code"
-      " type",
-      guard);
-  }
-  else if(!is_code_type(value) && is_code_type(type))
-  {
-    dereference_failure(
-      "Code separation",
-      "Data object accessed with code "
-      "type",
-      guard);
-  }
-  else
-  {
-    assert(is_code_type(value) && is_code_type(type));
+  assert(is_code_type(value) || is_code_type(type));
 
-    if(mode != READ)
-    {
-      dereference_failure(
-        "Code separation",
-        "Program code accessed in write or"
-        " free mode",
-        guard);
-    }
-
-    // Only other constraint is that the offset has to be zero; there are no
-    // other rules about what code objects look like.
-    notequal2tc neq(offset, gen_zero(offset->type));
-    guardt tmp_guard = guard;
-    tmp_guard.add(neq);
+  if(!is_code_type(type))
+  {
     dereference_failure(
-      "Code separation",
-      "Program code accessed with non-zero"
-      " offset",
-      tmp_guard);
+      "Code separation", "Program code accessed with non-code type", guard);
+    return false;
   }
+
+  if(!is_code_type(value))
+  {
+    dereference_failure(
+      "Code separation", "Data object accessed with code type", guard);
+    return false;
+  }
+
+  if(mode != READ)
+  {
+    dereference_failure(
+      "Code separation", "Program code accessed in write or free mode", guard);
+  }
+
+  // Only other constraint is that the offset has to be zero; there are no
+  // other rules about what code objects look like.
+  notequal2tc neq(offset, gen_zero(offset->type));
+  guardt tmp_guard = guard;
+  tmp_guard.add(neq);
+  dereference_failure(
+    "Code separation", "Program code accessed with non-zero offset", tmp_guard);
 
   // As for setting the 'value', it's currently already set to the base code
   // object. There's nothing we can actually change it to mean anything, so
   // don't fiddle with it.
+
+  return true;
 }
 
 void dereferencet::check_data_obj_access(

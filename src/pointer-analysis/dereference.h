@@ -279,7 +279,7 @@ private:
 
   /** Interpret an actual dereference (or pointer-index) expression. First
    *  dereferences the pointer expression, then dereferences the pointer itself,
-   *  and stores the result in the 'expr' reference.
+   *  and stores the result in 'expr'.
    *  @param expr The expression we're going to be dereferencing.
    *  @param guard Guard of this expression being evaluated.
    *  @param mode The manner iin which the result of this deref is accessed.
@@ -383,6 +383,12 @@ private:
     expr2tc &value,
     unsigned int num_bytes,
     const expr2tc *bytes);
+  expr2tc stitch_together_from_byte_array(
+    const type2tc &type,
+    unsigned int num_bytes,
+    const expr2tc &byte_array,
+    const expr2tc &offset,
+    const guardt &guard);
   void wrap_in_scalar_step_list(
     expr2tc &value,
     std::list<expr2tc> *scalar_step_list,
@@ -398,7 +404,7 @@ private:
     const std::string &wants,
     const std::string &have);
 
-  void check_code_access(
+  bool check_code_access(
     expr2tc &value,
     const expr2tc &offset,
     const type2tc &type,

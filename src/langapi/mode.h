@@ -63,6 +63,7 @@ languaget *new_solidity_language(const messaget &msg);
 
 int get_mode(const std::string &str);
 int get_mode_filename(const std::string &filename);
+int get_old_frontend_mode(int current_mode);
 
 languaget *new_language(const char *mode, const messaget &msg);
 
