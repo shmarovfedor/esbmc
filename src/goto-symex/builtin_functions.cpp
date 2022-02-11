@@ -803,6 +803,8 @@ void goto_symext::intrinsic_memset(
   // Work out here whether we can construct an assignment for each thing
   // pointed at by the ptr.
   cur_state->rename(size);
+  if(is_typecast2t(size))
+    size = to_typecast2t(size).from;
   bool can_construct = true;
   for(const auto &item : internal_deref_items)
   {
