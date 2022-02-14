@@ -808,7 +808,8 @@ void goto_symext::intrinsic_memset(
   bool can_construct = true;
   for(const auto &item : internal_deref_items)
   {
-    const expr2tc &offs = item.offset;
+    expr2tc offs = item.offset;
+    simplify(offs);
 
     int tmpsize;
     try
@@ -893,7 +894,8 @@ void goto_symext::intrinsic_memset(
   {
     for(const auto &item : internal_deref_items)
     {
-      const expr2tc &offs = item.offset;
+      expr2tc offs = item.offset;
+      simplify(offs);
       expr2tc val = gen_zero(item.object->type);
       guardt curguard(cur_state->guard);
       curguard.add(item.guard);
