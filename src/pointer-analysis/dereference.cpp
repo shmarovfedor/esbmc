@@ -1286,7 +1286,8 @@ void dereferencet::construct_from_dyn_struct_offset(
       build_reference_rec(field, new_offset, type, guard, mode, alignment);
       extract_list.emplace_back(field_guard, field);
     }
-    else if((access_sz > it->get_width()) && (type->get_width() != 8))
+    else if((access_sz > it->get_width()) && (type->get_width() != 8)
+              && options.get_bool_option("struct-fields-check"))
     {
       guardt newguard(guard);
       newguard.add(field_guard);
