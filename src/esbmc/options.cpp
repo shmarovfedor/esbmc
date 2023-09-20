@@ -207,9 +207,10 @@ const struct group_opt_templ all_cmd_options[] = {
   {"Incremental BMC",
    {{"incremental-bmc", NULL, "incremental loop unwinding verification"},
     {"falsification", NULL, "incremental loop unwinding for bug searching"},
-    {"termination",
+    {"termination", NULL, "incremental loop unwinding assertion verification"},
+    {"encode-base-and-forward",
      NULL,
-     "incremental loop unwinding assertion verification"}}},
+     "encode base case and forward condition into the same formula"}}},
   {"Solver",
    {{"list-solvers", NULL, "list available solvers and exit"},
     {"boolector", NULL, "use Boolector (default),"},
@@ -237,7 +238,8 @@ const struct group_opt_templ all_cmd_options[] = {
     },
     {"non-supported-models-as-zero",
      NULL,
-     "if ESBMC can't extract a type/expression from the solver, then the value "
+     "if ESBMC can't extract a type/expression from the solver, then the "
+     "value "
      "will be set to zero"},
     {"smtlib-solver-prog",
 

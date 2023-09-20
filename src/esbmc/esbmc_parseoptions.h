@@ -66,6 +66,11 @@ protected:
     goto_functionst &goto_functions,
     const BigInt &k_step);
 
+  tvt solve_forward_if_base_holds(
+    optionst &options,
+    goto_functionst &goto_functions,
+    const BigInt &k_step);
+
   bool read_goto_binary(goto_functionst &goto_functions);
 
   bool set_claims(goto_functionst &goto_functions);

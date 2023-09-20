@@ -51,6 +51,8 @@ extern "C"
 #include <util/symbol.h>
 #include <util/time_stopping.h>
 
+#include <iostream>
+
 #ifndef _WIN32
 #include <sys/wait.h>
 #endif
@@ -517,7 +519,8 @@ int esbmc_parseoptionst::doit()
   // Now run one of the chosen strategies
   if (
     cmdline.isset("termination") || cmdline.isset("incremental-bmc") ||
-    cmdline.isset("falsification") || cmdline.isset("k-induction"))
+    cmdline.isset("falsification") || cmdline.isset("k-induction") ||
+    cmdline.isset("encode-base-and-forward"))
     return do_bmc_strategy(options, goto_functions);
 
   // If no strategy is chosen, just rely on the simplifier
@@ -1169,6 +1172,14 @@ int esbmc_parseoptionst::do_bmc_strategy(
       if (is_base_case_violated(options, goto_functions, k_step).is_true())
         return 1;
     }
+    // base and forward together
+    if(options.get_bool_option("encode-base-and-forward"))
+    {
+      tvt res = solve_forward_if_base_holds(options, goto_functions, k_step);
+      if(res.is_false())
+        return 1;
+      //std::cerr << ">>>>> tvt res = " << res << "\n";
+    }
   }
 
   log_status("Unable to prove or falsify the program, giving up.");
@@ -1218,6 +1229,41 @@ tvt esbmc_parseoptionst::is_base_case_violated(
 
   default:
     log_result("Unknown BMC result");
+    abort();
+  }
+
+  return tvt(tvt::TV_UNKNOWN);
+}
+
+tvt esbmc_parseoptionst::solve_forward_if_base_holds(
+  optionst &options,
+  goto_functionst &goto_functions,
+  const BigInt &k_step)
+{
+  options.set_option("base-case", true);
+  options.set_option("forward-condition", true);
+  options.set_option("inductive-step", false);
+  options.set_option("no-unwinding-assertions", false);
+  options.set_option("partial-loops", false);
+  options.set_option("unwind", integer2string(k_step));
+  bmct bmc(goto_functions, options, context);
+  log_progress("Checking forward condition and base case, k = {:d}", k_step);
+  switch(do_bmc(bmc))
+  {
+  case smt_convt::P_SATISFIABLE:
+    log_result("\nForward + base is satisfiable (k = {:d})", k_step);
+    return tvt(tvt::TV_TRUE);
+
+  case smt_convt::P_SMTLIB:
+  case smt_convt::P_ERROR:
+    break;
+
+  case smt_convt::P_UNSATISFIABLE:
+    log_result("\nForward + base is unsatisfiable (k = {:d})", k_step);
+    return tvt(tvt::TV_FALSE);
+
+  default:
+    log_fail("Unknown BMC result");
     abort();
   }
 

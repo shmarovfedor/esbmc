@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include <iostream>
+
 bool goto_symext::check_incremental(const expr2tc &expr, const std::string &msg)
 {
   auto rte = std::dynamic_pointer_cast<runtime_encoded_equationt>(target);
@@ -27,7 +29,9 @@ bool goto_symext::check_incremental(const expr2tc &expr, const std::string &msg)
   try
   {
     // check whether the assertion holds
+    std::cerr << ">>>>> asking a question. msg = " << msg << "\n";
     tvt res = rte->ask_solver_question(question);
+    std::cerr << ">>>>> the answer is: " << res << "\n";
     // we don't add this assertion to the resulting logical formula
     if (res.is_true())
       // incremental verification succeeded
