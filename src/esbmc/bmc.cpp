@@ -170,26 +170,6 @@ smt_convt::resultt bmct::run_decision_procedure(
   std::shared_ptr<smt_convt> &smt_conv,
   std::shared_ptr<symex_target_equationt> &eq)
 {
-  std::cerr << ">>>>>>>>>> ASSERTIONS in SSA\n";
-  unsigned int step_no = 0;
-  for(auto step : eq->SSA_steps)
-  {
-    if(step.is_assert())
-    {
-      std::cerr << ">>>>> SSA_step number: " << step_no << "\n";
-      std::cerr << ">>>>> This is an ASSERT. comment = " << step.comment << "\n";
-      if(step.comment.find("unwinding assertion") != std::string::npos)
-      {
-        std::cerr << ">>>>> This is an unwinding assertion\n";
-      }
-      else
-      {
-        std::cerr << ">>>>> This is NOT an unwinding assertion\n";
-      }
-      std::cerr << "----------\n";
-    }
-    step_no++;
-  }
   generate_smt_from_equation(smt_conv, eq);
 
   if (
@@ -636,6 +616,8 @@ smt_convt::resultt bmct::run_thread(std::shared_ptr<symex_target_equationt> &eq)
     "Symex completed in: {}s ({} assignments)",
     time2string(symex_stop - symex_start),
     eq->SSA_steps.size());
+  
+  std::cerr << "\n\n\n---------------------------------------\n\n\n";
 
   if (options.get_bool_option("double-assign-check"))
     eq->check_for_duplicate_assigns();

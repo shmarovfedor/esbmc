@@ -216,10 +216,14 @@ protected:
   void symex_assert();
 
   /**
-   *  Perform incremental SMT solving for assert and assume statements.
-   *  @param expr Expression that must be checked.
-   *  @param msg Textual message explaining assertion.
-   *  @return Return whether verification succeeded.
+   *  This methods checks current claim (i.e., ASSERTION or ASSUMPTION) 
+   *  using an SMT solver.
+   *
+   *  @param expr Claim that must be checked.
+   *  @param msg Textual message explaining the claim.
+   *  @return TRUE when the formulated decision problem (i.e., trace + claim)
+   *  is SATISFIABLE or UNSATISFIABLE, and FALSE if the answer is unknown or
+   *  the SMT backend throws an exception.
    */
   bool check_incremental(const expr2tc &expr, const std::string &msg);
 

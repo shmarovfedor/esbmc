@@ -518,7 +518,7 @@ tvt runtime_encoded_equationt::ask_solver_question(const expr2tc &question)
   conv.assert_ast(conv.invert_ast(q));
   smt_convt::resultt res2 = conv.dec_solve();
   pop_ctx();
-  std::cerr << ">>>>> asking a question: res2 = " << res2 << "\n";
+  std::cerr << ">>>>> asking a question (inverted): res2 = " << res2 << "\n";
 
   // So; which result?
   if (

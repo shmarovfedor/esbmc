@@ -33,12 +33,16 @@ bool goto_symext::check_incremental(const expr2tc &expr, const std::string &msg)
     tvt res = rte->ask_solver_question(question);
     std::cerr << ">>>>> the answer is: " << res << "\n";
     // we don't add this assertion to the resulting logical formula
-    if (res.is_true())
+    if(res.is_true())
+    {
+      std::cerr << ">>>>> the answer is TRUE so returning true\n";
       // incremental verification succeeded
       return true;
+    }
     // this assertion evaluates to false via incremental SMT solving
     if (res.is_false())
     {
+      std::cerr << ">>>>> the answer is FALSE so adding an assertion and returning true\n";
       // check assertion to produce a counterexample
       assertion(gen_false_expr(), msg);
       // eliminate subsequent execution paths
@@ -59,8 +63,11 @@ bool goto_symext::check_incremental(const expr2tc &expr, const std::string &msg)
   return false;
 }
 
+// This method is called for every assertion in ESBMC (i.e., coming from
+// the input program or checks introduced by ESBMC).
 void goto_symext::claim(const expr2tc &claim_expr, const std::string &msg)
 {
+  std::cerr << ">>>>>>> Making a claim. msg = " << msg << "\n";
   // Convert asserts in assumes, if it's not the last loop iteration
   // also, don't convert assertions added by the bidirectional search
   if (
@@ -69,14 +76,20 @@ void goto_symext::claim(const expr2tc &claim_expr, const std::string &msg)
     BigInt unwind = cur_state->loop_iterations[first_loop];
     if (unwind < (max_unwind - 1))
     {
+      std::cerr << ">>>>>>> Turning claim expression into ASSUME\n";
       assume(claim_expr);
       return;
     }
   }
 
   // Can happen when evaluating certain special intrinsics. Gulp.
-  if (cur_state->guard.is_false())
+  if(cur_state->guard.is_false())
+  {
+    std::cerr << ">>>>>>> Guard is FALSE. Returning ...\n";
     return;
+  }
+  std::cerr << ">>>>>>> Guard is NOT FALSE\n";
+  std::cerr << ">>>>>>> guard = " << cur_state->guard.as_expr() << "\n";
 
   total_claims++;
 
@@ -86,18 +99,30 @@ void goto_symext::claim(const expr2tc &claim_expr, const std::string &msg)
   // first try simplifier on it
   do_simplify(new_expr);
 
-  if (is_true(new_expr))
-    return;
-
-  if (options.get_bool_option("smt-symex-assert"))
+  if(is_true(new_expr))
   {
-    if (check_incremental(new_expr, msg))
+    std::cerr << ">>>>>>> Claim expr is TRUE. Returning ...\n";
+    return;
+  }
+    
+  std::cerr << ">>>>>>> Claim expr is NOT TRUE\n";
+  if(options.get_bool_option("smt-symex-assert"))
+  {
+    if(check_incremental(new_expr, msg))
+    {
+      std::cerr << ">>>>>>> Check incremental SUCCESS. Returning ...\n\n\n\n\n";
       // incremental verification has succeeded
       return;
+    }
+    else
+    {
+      std::cerr << ">>>>>>> Check incremental FAILURE\n";
+    }
   }
 
   // add assertion to the target equation
   assertion(new_expr, msg);
+  std::cerr << ">>>>>>> Assertion is added to the target equation\n\n\n\n\n";
 }
 
 void goto_symext::assertion(
