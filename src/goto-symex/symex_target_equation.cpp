@@ -9,8 +9,6 @@
 #include <util/migrate.h>
 #include <util/std_expr.h>
 
-#include <iostream>
-
 void symex_target_equationt::debug_print_step(const SSA_stept &step) const
 {
   std::ostringstream oss;
@@ -487,7 +485,6 @@ std::shared_ptr<symex_targett> runtime_encoded_equationt::clone() const
 
 tvt runtime_encoded_equationt::ask_solver_question(const expr2tc &question)
 {
-  std::cerr << ">>>>> asking a question: " << from_expr(question) << "\n";
   tvt final_res;
 
   // So - we have a formula, we want to work out whether it's true, false, or
@@ -513,12 +510,10 @@ tvt runtime_encoded_equationt::ask_solver_question(const expr2tc &question)
   conv.assert_ast(q);
   smt_convt::resultt res1 = conv.dec_solve();
   pop_ctx();
-  std::cerr << ">>>>> asking a question: res1 = " << res1 << "\n";
   push_ctx();
   conv.assert_ast(conv.invert_ast(q));
   smt_convt::resultt res2 = conv.dec_solve();
   pop_ctx();
-  std::cerr << ">>>>> asking a question (inverted): res2 = " << res2 << "\n";
 
   // So; which result?
   if (
@@ -548,6 +543,7 @@ tvt runtime_encoded_equationt::ask_solver_question(const expr2tc &question)
   else
   {
     pop_ctx();
+    // What does this mean???
     throw dual_unsat_exception();
   }
 

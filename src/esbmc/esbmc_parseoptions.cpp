@@ -51,8 +51,6 @@ extern "C"
 #include <util/symbol.h>
 #include <util/time_stopping.h>
 
-#include <iostream>
-
 #ifndef _WIN32
 #include <sys/wait.h>
 #endif
@@ -1178,7 +1176,6 @@ int esbmc_parseoptionst::do_bmc_strategy(
       tvt res = solve_forward_if_base_holds(options, goto_functions, k_step);
       if(res.is_false())
         return 1;
-      //std::cerr << ">>>>> tvt res = " << res << "\n";
     }
   }
 

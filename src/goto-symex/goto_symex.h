@@ -216,7 +216,7 @@ protected:
   void symex_assert();
 
   /**
-   *  This methods checks current claim (i.e., ASSERTION or ASSUMPTION) 
+   *  This methods checks current claim (i.e., ASSERTION or ASSUMPTION)
    *  using an SMT solver.
    *
    *  @param expr Claim that must be checked.

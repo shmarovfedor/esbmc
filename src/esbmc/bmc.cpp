@@ -41,8 +41,6 @@
 #include <atomic>
 #include <goto-symex/witnesses.h>
 
-#include <iostream>
-
 bmct::bmct(goto_functionst &funcs, optionst &opts, contextt &_context)
   : options(opts), context(_context), ns(context)
 {
@@ -616,8 +614,6 @@ smt_convt::resultt bmct::run_thread(std::shared_ptr<symex_target_equationt> &eq)
     "Symex completed in: {}s ({} assignments)",
     time2string(symex_stop - symex_start),
     eq->SSA_steps.size());
-  
-  std::cerr << "\n\n\n---------------------------------------\n\n\n";
 
   if (options.get_bool_option("double-assign-check"))
     eq->check_for_duplicate_assigns();

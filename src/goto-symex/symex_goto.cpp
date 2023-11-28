@@ -12,8 +12,6 @@
 #include <util/prefix.h>
 #include <util/std_expr.h>
 
-#include <iostream>
-
 void goto_symext::symex_goto(const expr2tc &old_guard)
 {
   const goto_programt::instructiont &instruction = *cur_state->source.pc;
@@ -26,9 +24,9 @@ void goto_symext::symex_goto(const expr2tc &old_guard)
   bool new_guard_true = is_true(new_guard);
 
   // Here we try evaluating the guard using the SMT solver
-  // as we are performing symbolic execution (when the appropriate flag 
+  // as we are performing symbolic execution (when the appropriate flag
   // is enabled)
-  if(!new_guard_false && options.get_bool_option("smt-symex-guard"))
+  if (!new_guard_false && options.get_bool_option("smt-symex-guard"))
   {
     auto rte = std::dynamic_pointer_cast<runtime_encoded_equationt>(target);
 
@@ -408,9 +406,7 @@ void goto_symext::phi_function(const statet::goto_statet &goto_state)
 
 void goto_symext::loop_bound_exceeded(const expr2tc &guard)
 {
-  std::cerr << ">>>>> Inside loop bound exceeded\n";
-  std::cerr << ">>>>> guard = " << guard << "\n";
-  if(partial_loops && !config.options.get_bool_option("termination"))
+  if (partial_loops && !config.options.get_bool_option("termination"))
     return;
 
   const irep_idt &loop_id = cur_state->source.pc->location.loopid();
